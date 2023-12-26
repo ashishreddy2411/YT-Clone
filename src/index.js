@@ -4,7 +4,6 @@ import db from "./db/dbconnect.js";
 
 dotenv.config({path:"./env"});
 const app = express();
-
 db()
 .then(()=>{
     try{
