@@ -18,8 +18,9 @@ cloudinary.config({
         console.log("File uploaded successfully to cloud",result.url);
         return result;
     }catch(error){
-        throw error;
-    }finally{
         fs.unlinkSync(filePath);
+        throw error;
     }
   };
+
+    export {uploadFile};

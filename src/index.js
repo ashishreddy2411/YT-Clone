@@ -3,7 +3,7 @@ import express from "express";
 import db from "./db/dbconnect.js";
 import {app} from './app.js'
 
-dotenv.config({path:"./env"});
+dotenv.config({path:"./.env"});
 
 db()
 .then(()=>{
