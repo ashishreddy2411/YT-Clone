@@ -15,32 +15,31 @@ const registerUser= asyncHandler(async (req, res) => {
     if(userExists){
         throw new ApiError(409, "User already exists");
     }
-
-    console.log("User: ", req.body);
-
     const lavatarPath=req.files?.avatar[0]?.path;
-    const lcoverImagePath=req.files?.coverImage[0]?.path;
+    // const lcoverImagePath=req.files?.coverImage[0]?.path;
+    // console.log("Cover Image Path: ", lcoverImagePath);
 
+    var avatar=null;
+    var coverImage=null;
     if(lavatarPath)
         {
-            const avatar=await uploadFile(lavatarPath);
+            avatar=await uploadFile(lavatarPath);
         }
-    if(lcoverImagePath)
-        {
-            const coverImage=await uploadFile(lcoverImagePath);
-        }
+    // if(lcoverImagePath)
+    //     {
+    //         const coverImage=await uploadFile(lcoverImagePath);
+    //     }
 
     const user = await User.create({
-        username:username.tolowercase(),
+        username,
         fullname,
         email,
         password,
         avatar:avatar.url||null,
-        coverImage:coverImage.url||null,
+        coverImage:null,
     });
 
-    const createdUser = await user.findbyId(user._id).select("-password -refreshToken");
-    console.log("Created User: ", createdUser);
+    const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
     if(!createdUser){
         throw new ApiError(500, "User not created");
@@ -48,13 +47,5 @@ const registerUser= asyncHandler(async (req, res) => {
 
     return res.status(201).json(new ApiResponse(200, "User created successfully", createdUser));
 });
-
-
-// {
-//     "username":"ashishjaddu",
-//     "fullname":"Ashish Reddy Jaddu",
-//     "email":"ashishrocker0@gmail.com",
-//     "password":"Reset@123"
-// }
 
 export { registerUser}
