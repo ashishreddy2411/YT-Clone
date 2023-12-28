@@ -25,6 +25,7 @@ const userSchema=new mongoose.Schema({
         maxlength: 50,
         trim: true,
         lowercase: true,
+        format: "email",
     },
     password: {
         type: String,
