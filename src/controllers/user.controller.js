@@ -16,8 +16,8 @@ const registerUser= asyncHandler(async (req, res) => {
         throw new ApiError(409, "User already exists");
     }
     const lavatarPath=req.files?.avatar[0]?.path;
-    // const lcoverImagePath=req.files?.coverImage[0]?.path;
-    // console.log("Cover Image Path: ", lcoverImagePath);
+    const lcoverImagePath=req.files?.coverImage[0]?.path;
+
 
     var avatar=null;
     var coverImage=null;
@@ -25,18 +25,17 @@ const registerUser= asyncHandler(async (req, res) => {
         {
             avatar=await uploadFile(lavatarPath);
         }
-    // if(lcoverImagePath)
-    //     {
-    //         const coverImage=await uploadFile(lcoverImagePath);
-    //     }
-
+    if(lcoverImagePath)
+        {
+            coverImage=await uploadFile(lcoverImagePath);
+        }
     const user = await User.create({
         username,
         fullname,
         email,
         password,
         avatar:avatar.url||null,
-        coverImage:null,
+        coverImage:coverImage.url||null,
     });
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken");

@@ -14,13 +14,12 @@ cloudinary.config({
             return null;
         }
         const result=await cloudinary.uploader.upload(filePath);
-        console.log("File uploaded successfully to cloud",result.url);
-        fs.unlinkSync(filePath);
         return result;
     }catch(error){
         console.log("Error while uploading file to cloud",error);
-        fs.unlinkSync(filePath); 
         throw error;
+    }finally{
+        fs.unlinkSync(filePath);
     }
   };
 
