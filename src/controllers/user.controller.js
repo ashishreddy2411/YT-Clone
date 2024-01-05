@@ -4,6 +4,7 @@ import {ApiError} from "../utils/ApiErrors.js"
 import {User} from "../models/user.models.js";
 import {uploadFile} from "../utils/FileUpload.js";
 import { ApiResponse } from '../utils/ApiResponse.js';
+import jwt from "jsonwebtoken";
 
 const registerUser= asyncHandler(async (req, res) => {
     const { username, fullname, email, password } = req.body;
@@ -107,4 +108,35 @@ const logoutUser= asyncHandler(async (req, res) => {
     return res.status(200).cookie("refreshToken", null,options).cookie("accessToken", null).json(new ApiResponse(200, "User logged out successfully", null));
 });
 
-export { registerUser,loginUser ,logoutUser}
+const refreshAccessToken= asyncHandler(async (req, res) => {
+    try {
+        const reqToken=req.cookies.refreshToken || req.body.refreshToken;
+        if(!reqToken){
+            throw new ApiError(401, "Unauthorized request");
+        }
+        const decoded=jwt.verify(reqToken,process.env.Refresh_Token_Secret);
+        if(!decoded){
+            throw new ApiError(401, "Invalid token from JWT");
+        }
+        const user=await User.findById(decoded._id).select("-password -refreshToken");
+        if(!user){
+            throw new ApiError(404, "User not found");
+        }
+        if(user.refreshToken!==reqToken){
+            throw new ApiError(401, "Refresh token not matched");
+        }
+        const accessToken=await user.generateAccessToken();
+        const refreshToken=await user.generateRefreshToken();
+        user.refreshToken=refreshToken;
+        await user.save({validateBeforeSave: false});
+        const options={
+            httpOnly: true,
+            secure:true,
+        };
+        return res.status(200).cookie("refreshToken", refreshToken,options).cookie("accessToken", accessToken,options).json(new ApiResponse(200, "Access token refreshed successfully", user));
+    
+    } catch (error) {
+        throw new ApiError(401, "Invalid Token from catch");
+    }});
+
+export { registerUser,loginUser ,logoutUser,refreshAccessToken}
