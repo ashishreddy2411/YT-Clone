@@ -18,4 +18,8 @@ router.route("/logout").post(verifyUser,logoutUser);
 
 router.route("/refreshToken").post(refreshAccessToken);
 
+router.route("/changePassword").post(verifyUser,changePassword);
+
+router.route("/updateProfile").post(verifyUser,updateAccountDetails);
+
 export default router;
