@@ -5,6 +5,7 @@ import {User} from "../models/user.models.js";
 import {uploadFile} from "../utils/FileUpload.js";
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const registerUser= asyncHandler(async (req, res) => {
     const { username, fullname, email, password } = req.body;
@@ -243,6 +244,65 @@ const updateCoverImage= asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Cover image updated successfully", user));
 });
 
+const channelsSubcribed= asyncHandler(async (req, res) => {
+    const { username } = req.user;
+    if ([username].some((arg) => arg === ""))
+        {
+            throw new ApiError(400, "Please fill all the fields");
+        }
+    const channels=await User.aggregate([
+        {
+            $match: {
+                username: username,
+            },
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers",
+            },
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo",
+            },
+        },
+        {
+            $addFields: {
+                subscribersCount: { $size: "$subscribers" },
+                subscribedToCount: { $size: "$subscribedTo" },
+            },
+        },
+        {
+            $project: {
+                username: 1,
+                subscribersCount: 1,
+                subscribedToCount: 1,
+                fullname: 1,
+                avatar: 1,
+                coverImage: 1,
+                isSubscribed: {
+                    $cond: {
+                        if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                        then: true,
+                        else: false
+                    }
+                }
+            },
+        },
+    ]);
+    if(!channels){
+        throw new ApiError(404, "Channel not found");
+    }
+    console.log(channels);
+    return res.status(200).json(new ApiResponse(200, "Channel fetched successfully", channels[0]));
+});
+
 export { 
     registerUser,
     loginUser,
@@ -252,4 +312,5 @@ export {
     getCurrentUser,
     updateAccountDetails,
     updateAvatar,
-    updateCoverImage}
+    updateCoverImage,
+    channelsSubcribed}
