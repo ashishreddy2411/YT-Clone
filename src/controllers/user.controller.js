@@ -5,7 +5,6 @@ import {User} from "../models/user.models.js";
 import {uploadFile} from "../utils/FileUpload.js";
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 
 const registerUser= asyncHandler(async (req, res) => {
     const { username, fullname, email, password } = req.body;
@@ -303,6 +302,65 @@ const channelsSubcribed= asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Channel fetched successfully", channels[0]));
 });
 
+const getWatchHistory= asyncHandler(async (req, res) => {
+    const { username } = req.user;
+    if ([username].some((arg) => arg === ""))
+        {
+            throw new ApiError(400, "Please fill all the fields");
+        }
+    const user=await User.aggregate([
+        {
+            $match:{
+                username:username
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            user[0].watchHistory,
+            "Watch history fetched successfully"
+        )
+    );
+});
+
 export { 
     registerUser,
     loginUser,
@@ -313,4 +371,5 @@ export {
     updateAccountDetails,
     updateAvatar,
     updateCoverImage,
-    channelsSubcribed}
+    channelsSubcribed,
+    getWatchHistory}
