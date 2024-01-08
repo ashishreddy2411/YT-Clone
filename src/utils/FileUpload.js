@@ -7,13 +7,13 @@ cloudinary.config({
     api_secret: process.env.Cloud_Api_Secret, 
   });
 
-  const uploadFile=async (filePath)=>{
+  const uploadFile=async (filePath, resourceType = "auto")=>{
     try{
         if(!filePath){
             throw new Error("File not found");
             return null;
         }
-        const result=await cloudinary.uploader.upload(filePath);
+        const result=await cloudinary.uploader.upload(filePath,{resource_type:resourceType});
         return result;
     }catch(error){
         console.log("Error while uploading file to cloud",error);
