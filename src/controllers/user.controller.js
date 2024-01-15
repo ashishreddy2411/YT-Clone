@@ -298,7 +298,6 @@ const channelsSubcribed= asyncHandler(async (req, res) => {
     if(!channels){
         throw new ApiError(404, "Channel not found");
     }
-    console.log(channels);
     return res.status(200).json(new ApiResponse(200, "Channel fetched successfully", channels[0]));
 });
 

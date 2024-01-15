@@ -18,10 +18,14 @@ app.use(cookieParser());
 import userRouter from "./routes/user.routes.js";
 import videoRouter from "./routes/video.routes.js";
 import tweetRouter from "./routes/tweet.routes.js";
+import subscriptionRouter from "./routes/subscription.routes.js";
+import likesRouter from "./routes/likes.routes.js";
 
 app.use("/users", userRouter);
 app.use("/videos", videoRouter);
 app.use("/tweets", tweetRouter);
+app.use("/subscriptions", subscriptionRouter);
+app.use("/likes", likesRouter);
 
 export {app};
 
