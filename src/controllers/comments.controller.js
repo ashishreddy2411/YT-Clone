@@ -27,15 +27,54 @@ const getVideoComments = asyncHandler(async (req, res) => {
 })
 
 const addComment = asyncHandler(async (req, res) => {
-    
+    const {videoId} = req.params
+    const {comment} = req.body
+    if(!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid video id")
+    }
+    const video = await Video.findById(videoId)
+    if(!video) {
+        throw new ApiError(404, "Video not found")
+    }
+    const newComment = await Comment.create({
+        video: videoId,
+        content: comment,
+        owner: req.user._id
+    })
+    res.status(201).json(new ApiResponse(201, "Comment Added", newComment))
 })
 
 const updateComment = asyncHandler(async (req, res) => {
-    // TODO: update a comment
+    const {commentId} = req.params
+    const {comment} = req.body
+    if(!isValidObjectId(commentId)) {
+        throw new ApiError(400, "Invalid comment id")
+    }
+    const commentToUpdate = await Comment.findById(commentId)
+    if(!commentToUpdate) {
+        throw new ApiError(404, "Comment not found")
+    }
+    if(commentToUpdate.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not allowed to update this comment")
+    }
+    const updatecom=await Comment.findByIdAndUpdate(commentId, {content: comment}, {new: true})
+    res.status(200).json(new ApiResponse(200, "Comment Updated", updatecom))
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
-    // TODO: delete a comment
+    const {commentId} = req.params
+    if(!isValidObjectId(commentId)) {
+        throw new ApiError(400, "Invalid comment id")
+    }
+    const commentToDelete = await Comment.findById(commentId)
+    if(!commentToDelete) {
+        throw new ApiError(404, "Comment not found")
+    }
+    if(commentToDelete.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not allowed to delete this comment")
+    }
+    await Comment.findByIdAndDelete(commentId)
+    res.status(200).json(new ApiResponse(200, "Comment Deleted"))
 })
 
 export {
